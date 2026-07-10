@@ -85,7 +85,7 @@ const getBookingsByRoomAndDates = (roomId, checkIn, checkOut) => {
         OR (check_in >= ? AND check_in < ?)
         OR (check_out > ? AND check_out <= ?)
       )
-      AND booking_status != 'cancelled'
+      AND booking_status NOT IN ('canceled', 'cancelled')
     `;
     db.query(sql, [roomId, checkOut, checkIn, checkIn, checkOut, checkIn, checkOut], (err, results) => {
       if (err) return reject(err);

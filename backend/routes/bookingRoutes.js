@@ -14,6 +14,6 @@ router.get("/my", verifyUser, bookingController.getMyBookings);
 router.get("/", verifyUser, verifyAdmin, bookingController.getAllBookings);
 
 // Admin updates booking status
-router.put("/:bookingId/status", verifyAdmin, bookingController.updateBookingStatus);
+router.put("/:bookingId/status", verifyUser, verifyAdmin, bookingController.updateBookingStatus);
 
 module.exports = router;

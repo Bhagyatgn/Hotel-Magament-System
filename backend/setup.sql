@@ -4,7 +4,7 @@ USE hotel_booking;
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50),
-  email VARCHAR(50),
+  email VARCHAR(100) UNIQUE,
   password VARCHAR(255),
   role ENUM('user','admin') DEFAULT 'user'
 );
@@ -41,4 +41,16 @@ CREATE TABLE IF NOT EXISTS bookings (
   booking_status ENUM('pending','confirmed','canceled') DEFAULT 'pending',
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (room_id) REFERENCES rooms(id)
+);
+
+CREATE TABLE IF NOT EXISTS offers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(100) NOT NULL,
+  subtitle VARCHAR(150),
+  description TEXT,
+  discount_label VARCHAR(50) NOT NULL,
+  image_url VARCHAR(255),
+  valid_until DATE,
+  status ENUM('active','inactive') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -1,29 +1,58 @@
-const db = require("../utils/db");
+const bcrypt = require('bcrypt');
+const db = require('../utils/db');
+const { validateEmail, validatePassword } = require('../utils/validateInput');
 
-// Get user profile
 const getUserProfile = (req, res) => {
-  const userId = req.user.id; // comes from authMiddleware
-  const sql = "SELECT id, name, email, role FROM users WHERE id = ?";
+  const userId = req.user.id;
+  const sql = 'SELECT id, name, email, role FROM users WHERE id = ?';
   db.query(sql, [userId], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0) return res.status(404).json({ message: "User not found" });
+    if (results.length === 0) return res.status(404).json({ message: 'User not found' });
     res.json(results[0]);
   });
 };
 
-// Update user profile
-const updateUserProfile = (req, res) => {
+const updateUserProfile = async (req, res) => {
   const userId = req.user.id;
   const { name, email, password } = req.body;
 
-  const sql = "UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?";
-  db.query(sql, [name, email, password, userId], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: "Profile updated successfully" });
-  });
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  if (!email || !validateEmail(email)) {
+    return res.status(400).json({ error: 'Valid email is required' });
+  }
+
+  try {
+    let hashedPassword = null;
+    if (password && password.trim()) {
+      if (!validatePassword(password)) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      }
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
+
+    const sql = hashedPassword
+      ? 'UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?'
+      : 'UPDATE users SET name = ?, email = ? WHERE id = ?';
+    const params = hashedPassword
+      ? [name.trim(), email.trim().toLowerCase(), hashedPassword, userId]
+      : [name.trim(), email.trim().toLowerCase(), userId];
+
+    db.query(sql, params, (err) => {
+      if (err) {
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({ error: 'Email already in use' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ message: 'Profile updated successfully' });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Could not update profile' });
+  }
 };
 
-// Get all bookings of the user
 const getUserBookings = (req, res) => {
   const userId = req.user.id;
   const sql = `

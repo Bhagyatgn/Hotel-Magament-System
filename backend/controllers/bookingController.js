@@ -1,6 +1,21 @@
 const bookingModel = require("../models/bookingModel");
 const roomModel = require("../models/roomModel");
 
+const ALLOWED_BOOKING_STATUSES = new Set(["pending", "confirmed", "canceled", "cancelled"]);
+
+const normalizeBookingStatus = (status) => {
+  if (typeof status !== "string") {
+    return null;
+  }
+
+  const normalized = status.trim().toLowerCase();
+  if (normalized === "cancelled") {
+    return "canceled";
+  }
+
+  return ALLOWED_BOOKING_STATUSES.has(normalized) ? normalized : null;
+};
+
 // Create a new booking
 const createBooking = async (req, res) => {
   try {
@@ -77,7 +92,13 @@ const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
     const { status } = req.body;
-    await bookingModel.updateBookingStatus(bookingId, status);
+
+    const normalizedStatus = normalizeBookingStatus(status);
+    if (!normalizedStatus) {
+      return res.status(400).json({ message: "Status must be pending, confirmed, or canceled" });
+    }
+
+    await bookingModel.updateBookingStatus(bookingId, normalizedStatus);
     res.json({ message: "Booking status updated" });
   } catch (error) {
     console.error(error);
