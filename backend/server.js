@@ -13,6 +13,7 @@ const bookingRoutes=require('./routes/bookingRoutes');
 const offerRoutes=require('./routes/offerRoutes');
 const userRoutes = require('./routes/useRoutes');
 const { verifyUser } = require('./middlewares/authMiddleware');
+const ensureSchema = require('./utils/ensureSchema');
 
 app.get('/', (req, res) => {
     res.send('Hotel Management API is running');
@@ -26,6 +27,13 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/users', verifyUser, userRoutes);
 
 const PORT=process.env.PORT||5000;
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+ensureSchema()
+    .then(() => {
+        app.listen(PORT, "0.0.0.0", () => {
+                console.log(`Server is running on http://localhost:${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('Schema initialization failed:', error);
+        process.exit(1);
+    });

@@ -29,7 +29,9 @@ services:
       - "5000:5000"
 
   frontend:
-    build: ./hotel-booking-frontend
+    build:
+      context: ./hotel-booking-frontend
+      dockerfile: Dokerfile
     container_name: hotel_frontend
     restart: unless-stopped
     depends_on:
